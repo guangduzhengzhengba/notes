@@ -1,0 +1,357 @@
+1.安装git(百度)
+2.创建版本库
+	mkdir ~/gitRepo
+	cd gitRepo
+	git init #创建版本库
+	git config --global user.name “297891854@qq.com" #设置全局用户名，如果不添加--global，就可以对当前仓库指定用户名
+	git config --global user.email "zhangjianbo01@beyondsoft.com" #同上
+	1)创建仓库后会在当前目录下生成一个隐藏目录.git
+	2)想用git管理某个文件，一定要在git仓库目录下，子目录也可以。
+2.1添加文件到仓库
+	1)git add <file>
+	2)git commit -m "<message>" #提交，-m 是添加本次提交的说明。
+2.2查看仓库当前状态
+	1)git status #查看文件是否被修改过。
+	2)git diff <file> #查看文件被修改的内容。
+		zhangjianbos-MacBook-Pro:Bob zhangjianbo$ git status
+	On branch master
+	Changes to be committed:
+  	(use "git reset HEAD <file>..." to unstage)
+
+		modified:   testgit.txt
+
+	zhangjianbos-MacBook-Pro:Bob zhangjianbo$ git commit -m "modify 1st"
+	[master 4267678] modify 1st
+	 1 file changed, 4 insertions(+), 3 deletions(-)
+	zhangjianbos-MacBook-Pro:Bob zhangjianbo$ git status
+	On branch master
+	nothing to commit, working tree clean
+	zhangjianbos-MacBook-Pro:Bob zhangjianbo$ vi testgit.txt 
+	zhangjianbos-MacBook-Pro:Bob zhangjianbo$ git diff testgit.txt 
+	diff --git a/testgit.txt b/testgit.txt
+	index 87de87a..c9ceed2 100644
+	--- a/testgit.txt
+	+++ b/testgit.txt
+	@@ -1,4 +1,5 @@
+	-test git 1st modify
+	+test git 2nd modify
+	bob wrote again
+	2018 08 18 pm
+	-4.47
+	+time 4.56
+	+git is free software
+3版本回退
+	1)git log #查看当前仓库的日志，加上--pretty=oneline,查看简要信息
+		zhangjianbos-MacBook-Pro:Bob zhangjianbo$ git log
+	commit ac77e08a119743c00499434bfc91111c1aae664d (HEAD -> master)
+	Author: Bob <zhangjianbo01@beyondsoft.com>
+	Date:   Tue Aug 21 16:58:19 2018 +0800
+
+    		modify 2nd
+
+	commit 426767844ddaf254a2fb6e01fe3c96f695b6ddc1
+	Author: Bob <zhangjianbo01@beyondsoft.com>
+	Date:   Tue Aug 21 16:54:41 2018 +0800
+
+    		modify 1st
+
+	commit f15175f874f9fd53f8b6ac3ba0f526f9be230fda
+	Author: Bob <zhangjianbo01@beyondsoft.com>
+	Date:   Tue Aug 21 16:42:12 2018 +0800
+
+    		wrote a test file
+
+	2)git reset --hard HEAD^ #HEAD表示当前版本，HEAD^表示上一个版本，HEAD^^表示上两个版本，HEAD~100表示上100个版本
+	   git reset --hard f1517 #f1517是command id的前几位。
+	   git reflog #记录每一次命令,如果使用git reset --hard HEAD^回到了上一个版本，最新版本使用git log就找不到了，这时使用 git reflog，找到你最新版本的command id，再使用git reset --hard <command id>就可以回到最新版本。
+
+4工作区和缓存区
+    工作区:工作区就是电脑里能看到的目录，比如我的～/bob
+    版本库:工作区有个.git隐藏目录，就是版本库
+	在git的版本库里面存了很多东西，其中最重要的就是stage暂存区，还有git为我们自动创建的第一个分支master，以及指向master的一个指针叫HEAD
+	前面把文件往git版本库里添加的时候，是分两步执行的：
+	    第一步：git add把文件添加进去，实际上就是把文件修改添加到暂存区。
+	    第二步：git commit提交更改，实际上就是把暂存区的所有内容提交到当前分支。
+
+5管理修改
+    理解了暂存区后，就会发现git管理的是修改，而不是文件。所以效率比较高。
+    git diff HEAD -- testgit.txt可以查看工作区和版本库里面最新版本的区别。
+
+6撤销修改
+    git checkout -- testgit.txt 可以把testgit.txt文件在工作区的修改全部撤销，这里撤销有两种情况：
+	第一种：testgit.txt自修改后还没有被放到暂存区，现在，撤销修改就会回到和版本库最新版本一模一样的状态
+	第二种：testgit.txt修改后已经添加到暂存区，又做了修改，现在，撤销修改后就会回到添加到暂存区后的状态
+	总之，就是让这个文件回到最后一次git commit或git add状态。
+    在git checkout -- <file>命令中的--很重要，如果没有--，就变成切换到另一个分支的命令。
+    在前面讲过git reset命令，是用来回退版本的，它也可以用来撤销修改，只要你使用了git add又没有使用git commit，意思就是把修改添加到了暂存区，这时使用git reset HEAD <file>
+	就可以把暂存区的修改撤销掉，加上HEAD时，就不是回退版本了，HEAD表示最新版本。
+
+7删除文件
+    在工作区，使用shell命令rm就可以删除文件，这时可能有两种情况：
+	第一种：确实要删除文件，这时因为工作区和版本库里面的内容不一致了（可以使用git status命令去查看），再使用git rm <file>删掉版本库里面的内容，再git commit；
+		例如：rm testgit.txt #删除工作区的文件
+		     git rm testgit.txt #删除版本库里面的内容
+		     git commit -m “remove testgit.txt”  #提交
+	第二种：删错文件了，因为版本库里面还有文件，这时我们可以恢复文件到最新版本
+		git checkout -- testgit.txt   
+		git check out 其实就是用版本库里面的版本替换工作区的版本。
+
+8远程仓库
+    8.1创建github仓库
+	注册github账号。297891854@qq.com/ak001122
+	因为本地git仓库与github仓库之间时的传输是通过ssh加密的，所以需要创建ssh key
+	第一步:创建ssh key。ssh-keygen -t rsa -C “297891854@qq.com”,运行命令后，就会在~/.ssh下生成id_rsa与id_rsa.pub密钥对，其中id_rsa是私钥，id_rsa.pub是公钥
+	第二部:登陆github，打开”Account settings”,”SSH Keys”页面，随便写个title，将id_rsa.pub里面的内容复制进去。
+    8.2添加远程库
+	现在的情形是，本地一个git仓库，在github上面一个远程库，需求是讲两个仓库进行同步。
+	第一步:登陆github，点击”create a new repo"创建一个新的仓库,在Repository name中输入bob_git_test，其他保持默认设置，点击create repository按钮，就可以创建一个新的github仓库。
+	第二步:根据github提示，在本地的Bob仓库下运行命令
+		git remote add origin https://github.com/guangduzhengzhengba/bob_git_test.git
+		这里使用的是https协议，需要输入密码，如果用git的话就不用输入密码，http协议还有个缺点就是速度慢
+		添加后，远程库的名字是origin，这是github的默认叫法，也可以改，不过origin这个名字一看就知道是远程仓库
+		删除git远程仓库
+			git remote -v 
+			git remote rm origin
+	第三部:将本地库的所有内容推送到远程库上
+		git push -u origin master
+		推送到远程仓库使用命令git push,由于刚才创建的远程仓库是空的，第一次推送master分支时，加上了-u参数，这样就不但把本地的master分支推送到了远程仓库的master分支，git还会
+		把本地的master分支和远程的master分支关联起来，在以后的推送或拉取时就可以简化命令。
+	推送成功后，就可以在github页面中看到远程库与本地库的内容一模一样。
+	从现在起，只要本地作了修改，就可以通过命令:
+		git push origin master
+	把本地master分支的最新修改推送至github
+    8.3从远程仓库克隆
+	登陆github，创建一个repo，名字为testclone,添加文件README.md
+	git clone git@github.com:guangduzhengzhengba/testclone.git
+	这样就将testclone克隆下来了，cd进去后会发现一个名为README.md的文件
+
+9分支管理
+    9.1创建与合并分支
+	git checkout -b dev #创建dev分支
+	git checkout 命令加上-b参数就是创建并切换，相当于以下两条命令
+		git branch dev	#创建分支
+		git checkout dev	#切换分支
+	git branch #查看当前分支，这个命令会列出所有分支，并在当前分支前加*符号
+	首先修改README.md里面的内容
+		vi README.md 随便修改
+	然后提交前面修改后的README.md：
+		git add README.md
+		git commit -m “branch test 1st modify”
+	然后切换到master分支
+		git checkout master
+	查看master分支上的README.md是否也被修改
+		cat README.md
+	发现没有修改过
+	合并dev分支到master
+		git merge dev
+	再查看README.md
+		cat README.md
+	发现README.md里面的内容是修改后的内容了，也就是dev分支的内容
+	删除dev分支
+		git branch -d dev
+	小结：
+		查看分支:git branch
+		创建分支:git branch <name>
+		切换分支:git checkout <name>
+		创建+切换分支:git checkout -b <name>
+		合并某分支到当前分支:git merge <name>
+		删除分支:git branch -d <name>
+    9.2解决冲突
+	模拟一个出现冲突的情况：
+		1)创建分支:git checkout -b feature1
+		2)修改README.md,在最后一行添加1*1=1
+		3)提交:	git add README.md
+			git commit -m “feature1 modify”
+		4)切换回master分支
+			git checkout master
+		5)修改README.md,在最后一行添加1X1=1
+		6)提交:	git add README.md
+			git commit -m “master modify”
+		7)合并分支: git merge feature1
+			这时master分支与feature1分支内容不相同，就会出现冲突
+			vi README.md可以查看不同的地方，git用<<<<<<    =========     >>>>>>>>>分隔开了不同分支的不同内容
+		8)修改master分支上的内容使之与feature1分支上的内容相同
+		9)提交:	git add README.md
+			git commit -m “master modify 2nd”
+		10)合并分支:
+			git merge feature1
+		11)查看分支合并情况
+			git log --graph --pretty=online --abbrev-commit 
+		12)删除分支
+			git branch -d feature1
+		搞定。
+	9.3分支管理策略
+		通常情况下，合并分支时，git会用Fast forward模式，但这种模式下，删除分支后，git会丢掉分支信息。
+		如果强制禁用Fast forward模式，git就会在merge时生成一个新的commit，这样，从分支历史上就可以看出分支信息。
+		1)创建分支dev
+			git checkout -b dev
+		2)修改README.md
+			echo “manage” >> README.md
+		3)提交
+			git add README.md
+			git commit -m “add manage”
+		4)切换回master分支
+			git checkout master
+		5)使用no-ff模式合并分支
+			git merge --no-ff -m ”merge with no-ff”
+		6)使用git log查看分支合并情况
+			git log --graph --pretty=online --abbrev-commit 
+	可以看到使用no-ff模式后，git的分支情况
+	合并分支时，加上--no-ff参数就可以用普通模式合并分支，合并后的历史分支可以看出来曾经做过分支合并
+	而fast forward模式合并分支就看不出来曾经做过的分支合并
+    9.4Bug分支
+	情况如下：
+		当接到一个修复代号为101的bug，很自然的就想创建一个issue-101分支来修复它，但是，这时在dev分支上进行的工作还没有提交，因为在dev分支上的
+		工作只进行了一半，还需要几天才能完成，但bug修复需要马上完成。
+	这时就需要使用git stash功能，它可以把当前工作现场储存起来，先去做紧要的事情，以后再恢复现场继续完成工作。
+	工作流程如下，此时正在dev分支：
+		git stash	#储存当前工作现场
+		git checkout master
+		git checkout -b issue-101
+		修复bug101
+		git add README.md
+		git commit -m “fix 101”
+		git checkout master
+		git merge --no-ff -m “merged bug fix 101” issue-101
+	    然后回到dev分支继续工作
+		git checkout dev
+		git stash list	#查看存储的工作现场，会有以下输出。
+		stash@{0}: WIP on dev: f52c633 add merge
+			下面需要恢复工作现场
+				第一种:
+					git stash apply	#这种恢复stash内容不会删除，需要使用git stash drop来删除
+				第二种:
+					git stash pop	#这种恢复的同时会把stash内容删除
+			可以多次使用stash，恢复的时候就使用git stash list查看，然后使用恢复命令:
+				git stash apply stash@{0}
+	9.5Feature分支
+		因为在开发过程中，经常遇到开发完成后需求改变了，当前feature1分支的内容不需要了。所以，此时就需要删除feature1分支，但是删除一个分支的前提是该分支必须被合并过，不然
+		普通的删除办法删除不了分支的，这时就需要-D参数
+		git branch -D feature1
+	9.6多人协作
+		通常不是一个人完成软件开发的，所以引入了多人协作模式
+		master分支是主分支，轻易不会修改，一般是保存比较稳定的版本，所以时刻需要与远程仓库同步
+		dev分支是开发分支，一般项目组的开发人员都会在dev分支上工作，也需要时刻与远程同步
+		bug分支只用于在本地进行bug修复，所以没必要与远程仓库同步
+		feature分支是否需要推送到远程，取决于是否该feature是合作开发的
+		
+		在同时开发的时候可能出现以下情况，你和你的小伙伴A从远程仓库的dev分支clone下到了本地dev分支，然后都做了修改。
+		小伙伴A修改完了之后push到了远程dev分支，这时你在push到远程分支的时候就会冲突。
+		下面模拟环境：
+			查看远程仓库信息:git remote
+						      git remote -v 显示更详细的信息
+			推送分支:
+				git push origin master
+				git push origin dev
+			小伙伴A:
+				git clone git@github:guangduzhengzhengba/bob_git_test.git
+				这时小伙伴A只能看到master分支，需要创建本地分支dev并与远程仓库的dev分支关联
+				git checkout -b dev origin/dev
+				现在，他可以在dev分支上做修改，并时不时的push到远程
+			此时，你也在本地dev分支上完成了工作，需要push到远程
+				git push origin dev
+			推送失败，因为小伙伴A最新提交与你的最新提交有冲突，此时先用
+				git pull
+			pull失败，因为本地dev分支与远程dev分支没有关联，设置本地dev与origin/dev的关联
+				git branch --set-upsream-to=origin/dev dev
+			再pull,成功。
+			把最新的提交从origin/dev抓下来再本地合并，解决冲突，再推送
+				git add README.md
+				git commit -m “fix env conflict”
+			成功。
+		因此，多人协作的工作通常是:
+			1)试图使用git push origin <branch-name>推送自己的修改
+			2)如果推送失败，则因为远程分支比你的本地分支更新，需要先用git pull试图合并
+			3)如果合并有冲突，解决冲突，然后本地提交
+			4)没有冲突或者解决冲突后，再用git push origin <branch-name>推送就能成功
+		如果git pull提示有no tracking information，则说明本地分支与远程分支没有关联，使用
+			git branch --set-upsream-to <branch-name> origin<branch-name>
+	9.7Rebase
+		rebase可以把本地未push的分叉提交历史整理成直线
+			git rebase
+
+10标签管理
+	发布一个版本是，我们通常先在版本库中打一个标签(tag),这样，就唯一确定了打标签时刻的版本。将来无论什么时候，取某个标签的版本，就是把那个打标签的时刻的历史版本取出来。所以，
+	标签也是版本库的一个快照。
+	10.1创建标签
+		首先，切换到需要打标签的分支上
+			git checkout master
+		然后打标签
+			git tag v1.0	#语法git tag <tagname>
+		可以使用命令
+			git tag
+		查看所有标签
+		有时候忘了打标签，方法就是找到历史提交的command id，再打标签就可以了
+			git log --graph --pretty=online --abbrev-commit 
+	然后输入命令:
+	    git tag v0.9 f52c633
+	使用
+	    git show <tagname>
+	查看标签信息
+	还可以创建带有说明的标签
+	    git tag -a v0.1 -m “version 0.1 released” 1094adc
+    10.2操作标签
+	如果标签打错了，删除标签
+	    git tag -d v0.1
+	因为创建的标签都只存储在本地，不会自动推送到远程，所以，打错的标签可以在本地安全删除
+	如果要推送某个标签到远程，使用命令
+	    git push origin <tagname>
+	或者一次性推送全部标签到远程
+	    git push origin --tags
+	如果标签已经推送到远程，要删除远程标签，就必须先删除本地标签
+	    git tag -d v0.9
+	然后从远程删除
+	    git push origin :refs/tags/v0.9
+		
+11自定义Git
+	让git显示颜色
+		git config --global color.ui true
+	11.1忽略特殊文件
+		在工作目录中，比如保存了密码的文件，不想提交它们，但每次git status时都会显示Untracked files…
+		这个问题可以在git工作区的根目录下创建.gitignore文件，然后把要忽略的文件名填进去，git就会自动忽略这些文件
+		vi .gitignore
+			#windows:
+			Thumbs.db
+			Desktop.ini
+			
+			#My configurations:
+			db.ini
+			*.so
+			*.class
+		有时候想单独添加某个文件
+			git add -f App.class
+		强制添加
+		有时候可以用命令
+			git check-ignore -V App.class
+		来检查规则
+	11.2配置别名
+		git config --global alias.st status
+		git st就表示git status
+		git config --global alias.co checkout
+		git config --global alias.ci commit
+		git config --global alias.br branch
+		git config --global alias.unstage ‘reset HEAD'
+        11.3配置文件
+		git每一个仓库的配置文件在.git/config文件中，而当前用户的git配置文件在~/.gitconfig中
+		比如删除别名，可以打开~/.gitconfig配置文件，删除[alias]标签下的内容。
+
+12搭建Git服务器
+	www.baidu.com
+
+
+
+
+
+	13:Tips
+		删除远程分支
+			git branch -d -r <branchname>
+		删除git服务器上的分支
+			git push origin -d <branchname>
+		创建本地分支与远程分支的关联
+			git branch --set-upstream-to=origin/dev dev
+		添加远程库
+			git remote add origin https://github.com/guangduzhengzhengba/bob_git_test.git
+		查看远程库
+			git remote -v
+		删除远程库
+			git remote rm origin
